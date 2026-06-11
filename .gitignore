@@ -216,3 +216,14 @@ __marimo__/
 
 # Streamlit
 .streamlit/secrets.toml
+
+# Modelos descargados
+modelos/*.pt
+modelos/*.onnx
+!modelos/.gitkeep
+
+# Datos locales
+datos/empleados/*
+datos/asistencias/*
+!datos/empleados/.gitkeep
+!datos/asistencias/.gitkeep

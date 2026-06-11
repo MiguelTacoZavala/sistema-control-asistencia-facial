@@ -1,2 +1,22 @@
-# sistema-control-asistencia-facial
-Sistema de control de asistencia basado en reconocimiento facial en tiempo real. La solución utiliza técnicas de visión computacional e inteligencia artificial para detectar, seguir e identificar personas mediante una cámara.
+# Face Recognition Attendance System
+
+Proyecto desarrollado para el curso de Inteligencia Artificial.
+
+## Integrantes
+
+- Taco
+- Rhamses
+- León
+
+## Tecnologías
+
+- Python
+- OpenCV
+- YOLO
+- ByteTrack
+- face_recognition
+- DeepFace
+
+## Objetivo
+
+Automatizar el registro de asistencia mediante reconocimiento facial.
