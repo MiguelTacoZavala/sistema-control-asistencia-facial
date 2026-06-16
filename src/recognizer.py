@@ -1,7 +1,7 @@
 """Módulo de reconocimiento facial usando face_recognition y DeepFace."""
 
 
-class Identificador:
+class Recognizer:
     """Reconoce empleados registrados y estima atributos faciales."""
 
     def __init__(self) -> None:

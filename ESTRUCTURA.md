@@ -1,75 +1,112 @@
-# Estructura del Proyecto — Sistema de Control de Asistencia Facial
+# Estructura del Proyecto — Sistema de Reconocimiento Facial en Tiempo Real
 
 ```
-DESARROLLO/
+faces-yolo-opencv/
 ├── README.md                 # Descripción general del proyecto
 ├── requirements.txt          # Dependencias de Python
 ├── .gitignore                # Archivos ignorados por git
 ├── ESTRUCTURA.md             # Este archivo
 │
-├── datos/                    # Datos persistentes del sistema
-│   ├── empleados/            # Fotos de los empleados registrados
-│   └── asistencias/          # Registros CSV o JSON de asistencia
+├── dataset/                  # Datos de entrada del sistema
+│   ├── known_faces/          # Fotos de personas registradas (subcarpeta por persona)
+│   └── test_videos/          # Videos de prueba para experimentos
 │
-├── modelos/                  # Pesos de modelos entrenados (YOLO, etc.)
+├── models/                   # Pesos de modelos preentrenados (YOLO)
+│
+├── experiments/              # Notebooks de los 6 experimentos con resultados
+│   └── graphs/               # Gráficos exportados de los experimentos
+│
+├── tests/                    # Notebooks de prueba unitaria de cada módulo
+│
+├── notebook_entrega/         # Notebook final (.ipynb) para entregar al profesor
+│
+├── screenshots/              # Capturas de pantalla de experimentos y demos
 │
 └── src/                      # Código fuente del sistema
-    ├── main.py               # Punto de entrada del programa
+    ├── __init__.py
+    ├── main.py               # Punto de entrada: loop de video en tiempo real (realtime.py en jira)
     ├── configuracion.py      # Constantes y rutas centralizadas
-    │
-    ├── deteccion/
-    │   └── detector.py       # Detección de rostros con YOLO
-    │
-    ├── seguimiento/
-    │   └── rastreador.py     # Seguimiento de personas con ByteTrack
-    │
-    ├── reconocimiento/
-    │   └── identificador.py  # Reconocimiento facial (face_recognition) y
-    │                         # estimación de edad/género (DeepFace)
-    │
-    ├── registro/
-    │   └── registrador.py    # Escritura de asistencias en CSV
-    │
-    ├── interfaz/
-    │   └── visualizador.py   # Visualización con OpenCV
-
+    ├── detector.py           # Detección de rostros con YOLOv8
+    ├── embedding_db.py       # Generación y almacenamiento de embeddings
+    ├── recognizer.py         # Reconocimiento facial por comparación de embeddings
+    └── tracker.py            # Seguimiento de rostros entre frames
 ```
 
 ## Descripción de directorios
 
-### `datos/`
-Datos generados y consumidos por el sistema.
+### `dataset/`
+Datos consumidos por el sistema para registro y evaluación.
 
 | Subdirectorio | Propósito |
 |---|---|
-| `empleados/` | Contiene una imagen por cada empleado registrado (`{id_empleado}.jpg`). El sistema carga estas imágenes para generar los encodings faciales. |
-| `asistencias/` | Almacena archivos CSV con el historial de asistencias (uno por día o uno único acumulativo). |
+| `known_faces/` | Contiene una subcarpeta por persona registrada (`gerardo/`, `kevin/`, `miguel/`), cada una con 15-20 fotos en distintas condiciones (ángulos, iluminación, accesorios). `embedding_db.py` lee estas fotos para generar los encodings faciales. |
+| `test_videos/` | Videos cortos (20-40s) para los experimentos: caso ideal, múltiples personas, poca luz, persona desconocida. Los videos pesados se almacenan en Drive; aquí solo se guarda un video corto de prueba. |
 
-### `modelos/`
-Almacena los pesos del modelo YOLO para detección de rostros. Los modelos de `face_recognition` y `DeepFace` se gestionan automáticamente en sus propios cachés internos.
+### `models/`
+Almacena los pesos preentrenados del modelo YOLO para detección de rostros. No se sube a Git por su tamaño; cada integrante los descarga desde Drive. Los modelos de `face_recognition` se gestionan automáticamente en su propio caché interno.
 
 | Archivo esperado | Propósito |
 |---|---|
-| `yolo-face.pt` | Pesos YOLO (ultralytics) fine-tuneado para detección de rostros. |
+| `yolov8n-face.pt` | Pesos YOLOv8 nano entrenados para detección de rostros. |
 
-### `src/` — Módulos del sistema
+### `experiments/`
+Notebooks de Jupyter con los 6 experimentos del proyecto. Cada notebook documenta: pregunta del experimento, procedimiento, resultados (tablas y gráficos) e interpretación.
 
-| Módulo | Clase/Funciones principales | Responsabilidad |
+| Notebook | Propósito |
+|---|---|
+| `exp1_baseline_detection.ipynb` | Medir FPS y confianza promedio del detector YOLO sin reconocimiento. |
+| `exp2_confidence_thresholds.ipynb` | Comparar umbrales 0.3, 0.5 y 0.7 para justificar el umbral seleccionado. |
+| `exp3_embeddings_registration.ipynb` | Documentar el proceso de registro: tiempos, fotos necesarias, estabilidad de embeddings. |
+| `exp4_recognition_accuracy.ipynb` | Medir precisión en 4 condiciones: frontal, perfil, desconocido, múltiples personas. |
+| `exp5_real_conditions.ipynb` | Simular caso de estudio de control de acceso con distintas condiciones. |
+| `exp6_performance_tradeoff.ipynb` | Cuantificar el costo en FPS de cada componente del sistema. |
+| `graphs/` | Gráficos `.png` exportados para insertar en el notebook entregable y los slides. |
+
+### `tests/`
+Notebooks de prueba para validar cada módulo de forma aislada antes de la integración.
+
+| Notebook | Propósito |
+|---|---|
+| `test_detector_images.ipynb` | Validar que el detector dibuja bounding boxes correctos sobre imágenes fijas. |
+| `test_recognizer_images.ipynb` | Validar que el reconocedor identifica correctamente rostros conocidos y desconocidos. |
+| `test_threshold_calibration.ipynb` | Probar múltiples umbrales de distancia y calcular FAR/FRR/EER. |
+| `test_embeddings_validation.ipynb` | Verificar calidad de la base: distancias intra-persona vs inter-persona. |
+
+### `notebook_entrega/`
+Contiene únicamente el notebook final que se entrega al profesor. Es autocontenido y ejecutable: incluye marco teórico, código documentado, resultados de experimentos, análisis y conclusiones.
+
+| Archivo | Formato de nombre |
+|---|---|
+| `solTC1_...ipynb` | `solTC1_León-Chacón_Gerardo-Bohorquez-Huaringa_Kevin-Taco-Zavala_Miguel.ipynb` |
+
+### `screenshots/`
+Capturas de pantalla del sistema funcionando en distintas condiciones. Se usan como evidencia en los experimentos y en el notebook entregable.
+
+## `src/` — Módulos del sistema
+
+| Módulo | Clase / Funciones | Responsabilidad |
 |---|---|---|
-| `main.py` | `main()` | Orquestar la captura de video, el pipeline de detección → seguimiento → reconocimiento → registro → visualización. |
-| `configuracion.py` | Constantes (`RUTA_MODELOS`, `CONFIANZA_MINIMA`, `CAMARA_ID`, etc.) | Centralizar rutas y parámetros configurables. |
-| `deteccion/detector.py` | `Detector` | Cargar el modelo YOLO y ejecutar inferencia sobre cada fotograma para obtener bounding boxes de rostros. |
-| `seguimiento/rastreador.py` | `Rastreador` | Asignar un ID único a cada persona detectada usando ByteTrack, manteniendo consistencia entre fotogramas. |
-| `reconocimiento/identificador.py` | `Identificador` | Comparar rostros contra la base de empleados (`face_recognition`) y estimar edad/género (`DeepFace`). |
-| `registro/registrador.py` | `Registrador` | Escribir en CSV la información de cada persona reconocida (ID, nombre, fecha, hora). |
-| `interfaz/visualizador.py` | `Visualizador` | Mostrar el video en una ventana OpenCV con rectángulos, etiquetas y métricas superpuestas. |
+| `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Acepta webcam o archivo de video por argumento. Controles de teclado (`q`, `s`, `r`, `espacio`). |
+| `configuracion.py` | Constantes (`YOLO_WEIGHTS`, `DETECTION_CONFIDENCE`, `RECOGNITION_THRESHOLD`, etc.) | Centralizar rutas, umbrales y parámetros configurables en un solo lugar. |
+| `detector.py` | `FaceDetector` | Cargar el modelo YOLOv8 y ejecutar inferencia sobre cada frame para obtener bounding boxes de rostros con su confianza. |
+| `embedding_db.py` | `generate_embeddings()` | Recorrer `dataset/known_faces/`, generar embeddings con `face_recognition`, y guardar el diccionario resultante en `embeddings.pkl`. Reportar fallidos en `fallidos.txt`. |
+| `recognizer.py` | `FaceRecognizer` | Cargar `embeddings.pkl`, comparar un rostro recortado contra la base por distancia euclidiana, y devolver el nombre más cercano o `"Desconocido"` si supera el umbral. |
+| `tracker.py` | `Tracker` | Asignar un ID único a cada rostro detectado y mantener consistencia entre frames para evitar reconocer el mismo rostro repetidamente. |
+
+## Archivos de salida generados por el sistema
+
+| Archivo | Generado por | Contenido |
+|---|---|---|
+| `embeddings.pkl` | `embedding_db.py` | Diccionario `{nombre: [embedding1, embedding2, ...]}` con los vectores faciales de cada persona registrada. |
+| `fallidos.txt` | `embedding_db.py` | Lista de fotos donde no se detectó rostro durante la generación de embeddings. |
+| `registro_acceso.csv` | `main.py --log` | Log de accesos: timestamp, nombre reconocido, confianza, número de frame. |
 
 ## Flujo del sistema
 
 ```
-frame → Detector (YOLO) → Rastreador (ByteTrack) → Identificador (face_recognition + DeepFace)
-                                                       ↓
-                                              Registrador (CSV)
-                                                       ↓
-                                              Visualizador (OpenCV → pantalla)
+frame → FaceDetector (YOLO) → Tracker → FaceRecognizer (embeddings)
+                                              ↓
+                                     registro_acceso.csv
+                                              ↓
+                                     OpenCV → pantalla (con boxes, nombres, FPS)
 ```

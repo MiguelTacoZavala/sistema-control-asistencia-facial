@@ -1,5 +1,7 @@
 from pathlib import Path
 
+# Datos de prueba
+
 RAIZ = Path(__file__).resolve().parent.parent
 
 RUTA_MODELOS = RAIZ / "modelos"

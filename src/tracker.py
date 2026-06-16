@@ -1,7 +1,7 @@
 """Módulo de seguimiento de personas usando ByteTrack."""
 
 
-class Rastreador:
+class Tracker:
     """Asigna identificadores únicos a personas detectadas usando ByteTrack."""
 
     def __init__(self) -> None:
