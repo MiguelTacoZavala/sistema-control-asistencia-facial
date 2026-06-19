@@ -11,7 +11,6 @@ DEPENDENCIAS = [
     ("pandas", "pandas"),
     ("matplotlib", "matplotlib"),
     ("PIL", "pillow"),
-    ("tqdm", "tqdm"),
 ]
 
 errores = 0
