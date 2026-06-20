@@ -82,3 +82,15 @@ DESARROLLO/
 - `ultralytics` instala PyTorch automáticamente (~2 GB de descarga)
 - `face-recognition` depende de `dlib`, que en Windows requiere CMake + Visual Studio Build Tools
 - No instalar `opencv-contrib-python` junto con `opencv-python` (entran en conflicto)
+
+## Dataset
+
+Fotos capturadas el **19 de junio de 2026** en `dataset/known_faces/`, una subcarpeta por persona:
+
+| Persona | Fotos | Formato | Condiciones |
+|---------|-------|---------|-------------|
+| gerardo | 15 | .jpg | Frontal, luz lateral, contraluz, perfiles, lentes, capucha, expresiones |
+| miguel  | 15 | .jpeg | Variadas (frontal, ángulos, iluminación) |
+| kevin   | 21 | .jpg | Frontal, expresiones, accesorios (lentes, capucha, gorra), perfiles, luz lateral |
+
+**Videos:** el video de prueba corto está en `dataset/test_videos/video_corto_prueba.mp4`. Los videos de los experimentos (más pesados) están en Google Drive.
