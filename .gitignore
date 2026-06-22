@@ -217,9 +217,10 @@ __marimo__/
 # Streamlit
 .streamlit/secrets.toml
 
-# Modelos descargados
+# Modelos descargados (excepto el detector principal, incluido en el repo)
 models/*.pt
 models/*.onnx
+!models/yolov8n-face.pt
 !models/.gitkeep
 
 # Datos locales

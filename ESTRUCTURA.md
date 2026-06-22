@@ -43,7 +43,7 @@ Datos consumidos por el sistema para registro y evaluación.
 | `test_videos/` | Videos cortos (20-40s) para los experimentos: caso ideal, múltiples personas, poca luz, persona desconocida. Los videos pesados se almacenan en Drive; aquí solo se guarda un video corto de prueba. |
 
 ### `models/`
-Almacena los pesos preentrenados del modelo YOLO para detección de rostros. No se sube a Git por su tamaño; cada integrante los descarga desde Drive. Los modelos de `face_recognition` se gestionan automáticamente en su propio caché interno.
+Almacena los pesos preentrenados del modelo YOLO para detección de rostros. El detector principal (`yolov8n-face.pt`, ~6 MB) está incluido en el repositorio. Otros checkpoints o exportaciones `.onnx` no se versionan.
 
 | Archivo esperado | Propósito |
 |---|---|
