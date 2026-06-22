@@ -93,6 +93,41 @@ Capturas de pantalla del sistema funcionando en distintas condiciones. Se usan c
 | `recognizer.py` | `FaceRecognizer` | Cargar `embeddings.pkl`, comparar un rostro recortado contra la base por distancia euclidiana, y devolver el nombre más cercano o `"Desconocido"` si supera el umbral. |
 | `tracker.py` | `Tracker` | Asignar un ID único a cada rostro detectado y mantener consistencia entre frames para evitar reconocer el mismo rostro repetidamente. |
 
+### `detector.py` — FaceDetector en detalle
+
+La clase `FaceDetector` encapsula toda la lógica de detección de rostros usando YOLOv8 de Ultralytics.
+
+**Inicialización:**
+```python
+detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
+```
+El constructor carga el modelo inmediatamente. El `conf_threshold` define la confianza mínima para considerar una detección válida.
+
+**Método `detect(frame, conf=None)`:**
+1. Recibe un frame BGR de OpenCV (numpy array).
+2. Llama a `self.model(frame, conf=conf, verbose=False)` que ejecuta la inferencia.
+3. El resultado de Ultralytics contiene `boxes.xyxy` (tensores con coordenadas `[x1, y1, x2, y2]` en píxeles) y `boxes.conf` (confianza de cada detección).
+4. Esos tensores (inicialmente en GPU) se pasan a CPU con `.cpu()`, se convierten a numpy con `.numpy()`, y se transforman a tuplas de Python.
+5. Devuelve una lista de tuplas: `[(x1, y1, x2, y2, confidence), ...]`.
+
+**Método `draw_detections(frame, detections)`:**
+- Dibuja un rectángulo verde por cada detección usando `cv2.rectangle`.
+- Escribe el valor de confianza arriba del rectángulo con `cv2.putText`.
+- Modifica y devuelve el frame (in-place).
+
+**Ejemplo de uso:**
+```python
+from src.detector import FaceDetector
+import cv2
+
+detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
+frame = cv2.imread("foto_con_rostros.jpg")
+detecciones = detector.detect(frame)
+frame_con_cajas = detector.draw_detections(frame, detecciones)
+cv2.imshow("Detecciones", frame_con_cajas)
+cv2.waitKey(0)
+```
+
 ## Archivos de salida generados por el sistema
 
 | Archivo | Generado por | Contenido |
