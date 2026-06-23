@@ -5,15 +5,9 @@ from ultralytics import YOLO
 
 
 class FaceDetector:
-    """Detecta rostros en fotogramas usando YOLOv8.
-
-    Carga un modelo preentrenado de YOLO y provee métodos para
-    ejecutar inferencia y visualizar los resultados.
-    """
 
     def __init__(self, weights_path: str, conf_threshold: float = 0.5) -> None:
         """Inicializa el detector cargando el modelo YOLO.
-
         Args:
             weights_path: Ruta al archivo .pt de los pesos del modelo.
             conf_threshold: Umbral de confianza mínimo para filtrar
@@ -53,6 +47,7 @@ class FaceDetector:
         # results[0].boxes.xyxy contiene los bounding boxes en
         # formato [x1, y1, x2, y2] normalizado a píxeles. Cada
         # fila es un tensor de 4 elementos.
+        
         # results[0].boxes.conf contiene la confianza de cada
         # detección. Ambas son tensores en GPU; los pasamos a
         # CPU y luego a numpy para trabajar con Python estándar.
