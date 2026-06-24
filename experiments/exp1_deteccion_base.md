@@ -29,7 +29,7 @@ el detector por sí solo y cuánto margen hay para agregarle los otros módulos.
    - Cantidad promedio de rostros por frame.
    - Tiempo de inferencia promedio por frame.
 4. Mostrar resultados en una tabla con pandas y un gráfico FPS vs. frame.
-5. Exportar las métricas a `results/resultados_exp1.csv`.
+5. Exportar las métricas a `experiments/resultados_exp1.csv`.
 
 ---
 
@@ -106,23 +106,6 @@ Este experimento mide solo **YOLO puro**. Cuando se agreguen:
 
 Por eso es importante que el detector base tenga FPS holgados, para que
 al final el sistema completo se mantenga sobre 10–15 FPS.
-
----
-
-## Ejecución en Google Colab
-
-Si no puedes correr el notebook localmente, usa Google Colab:
-
-1. En la raíz de tu Google Drive, crea una carpeta llamada `IA_Experimentos`.
-2. Sube el archivo `exp1_deteccion_base.ipynb` a esa carpeta.
-3. Haz clic derecho sobre el archivo → "Abrir con" → "Google Colab".
-4. Ejecuta las celdas en orden. Las primeras celdas montarán tu Drive,
-   clonarán el repositorio (solo la primera vez) e instalarán las dependencias.
-5. El resto del notebook se ejecuta normalmente. Los resultados (tabla, gráfico,
-   CSV) se guardan dentro del repositorio clonado en tu Drive.
-
-**Nota:** La primera ejecución tardará un poco más porque clona el repo
-e instala PyTorch (~2 GB). Las siguientes veces solo ejecuta sin instalar.
 
 ---
 
