@@ -1,7 +1,7 @@
 ultralytics>=8.0.0 # Para usar YOLO, tmb brinda bytetracking
 opencv-python>=4.8.0 # Dibuja rectangulo x frames.
 #===================================================================================
-face-recognition>=1.3.0 # Reconoce rostros (embedding)-> vector de características
+# face-recognition>=1.3.0 # Reconoce rostros (embedding)-> vector de características
 # por cada foto es un embedding, se puede comparar con otros embeddings para ver si son la misma persona o no.
 #===================================================================================
 numpy>=1.24.0 # Manipulación de arrays, probablemente no lo usemos directamente pero es una dependencia de otras librerías.
