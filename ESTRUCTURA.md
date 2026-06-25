@@ -128,6 +128,46 @@ cv2.imshow("Detecciones", frame_con_cajas)
 cv2.waitKey(0)
 ```
 
+### `recognizer.py` — FaceRecognizer en detalle
+
+La clase `FaceRecognizer` compara un rostro recortado contra la base de embeddings y devuelve el nombre de la persona o `"Desconocido"`.
+
+**Inicialización:**
+```python
+recognizer = FaceRecognizer("embeddings.pkl", threshold=0.6)
+```
+El constructor carga `embeddings.pkl` inmediatamente. Si el archivo no existe, la base queda vacía y se emite una advertencia. El `threshold` define la distancia euclidiana máxima para considerar una coincidencia válida (0.6 es el valor recomendado por `face_recognition`).
+
+**Método `reload_db()`:**
+1. Verifica que `embeddings.pkl` exista en disco.
+2. Si existe, lo abre con `pickle.load()` y asigna el diccionario a `self.embeddings_db`.
+3. Si no existe o está corrupto, asigna un diccionario vacío y muestra una advertencia.
+4. Útil para recargar la base sin reiniciar el sistema (por ejemplo, al registrar una nueva persona).
+
+**Método `recognize(face_crop)`:**
+1. Recibe un numpy array BGR (el rostro ya recortado por YOLO).
+2. Convierte BGR a RGB con `cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)`, porque `face_recognition` utiliza dlib internamente y dlib espera RGB.
+3. Llama a `face_recognition.face_encodings(rgb_image)` sobre el crop completo. Como el rostro ya está aislado, no es necesario pasar `known_face_locations`.
+4. Si no se genera embedding (rostro muy pequeño, borroso, etc.), retorna `("Sin rostro", 0.0)`.
+5. Si la base está vacía, retorna `("Desconocido", 0.0)`.
+6. Itera sobre todas las personas y todos sus embeddings, calculando distancia euclidiana con `np.linalg.norm(encoding_input - emb_db)`.
+7. Encuentra la persona con la menor distancia global.
+8. Si `distancia < threshold` → retorna `(nombre_persona, distancia)`.
+9. Si `distancia >= threshold` → retorna `("Desconocido", distancia)`.
+
+**Ejemplo de uso:**
+```python
+from src.recognizer import FaceRecognizer
+import cv2
+
+recognizer = FaceRecognizer("embeddings.pkl", threshold=0.6)
+frame = cv2.imread("foto_con_rostro.jpg")
+# Suponiendo que ya recortamos el rostro en x1, y1, x2, y2
+cara = frame[y1:y2, x1:x2]
+nombre, distancia = recognizer.recognize(cara)
+print(f"Reconocido: {nombre} (distancia: {distancia:.3f})")
+```
+
 ## Archivos de salida generados por el sistema
 
 | Archivo | Generado por | Contenido |
