@@ -7,7 +7,7 @@ def main() -> None:
     # Abrir cámara
     cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
     detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)    
-    prev = time.perf_counter()
+
     while True:
         # Leer frame de la cámara
         ret, frame = cap.read()
@@ -20,7 +20,6 @@ def main() -> None:
         detections = detector.detect(frame)        
         frame = detector.draw_detections(frame, detections)        
 
-        print(f"FPS: {fps:.2f}")
         # Mostrar imagen de la cámara
         cv2.imshow("Camara", frame)
 
