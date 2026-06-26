@@ -62,17 +62,27 @@ class FaceRecognizer:
             Tupla (nombre, distancia):
                 - ("Nombre persona", distancia) si coincide con el umbral.
                 - ("Desconocido", dist_min) si no hay coincidencia.
-                - ("Sin rostro", 0.0) si no se pudo extraer embedding.
+                - ("Desconocido", 0.0) si no se pudo extraer embedding.
                 - ("Error", 0.0) si ocurre una excepcion inesperada.
         """
         try:
             # Convertir BGR -> RGB porque face_recognition usa RGB
             rgb = cv2.cvtColor(face_crop, cv2.COLOR_BGR2RGB)
 
-            # Extraer embedding del rostro recortado
+            # Extraer embedding del rostro recortado.
+            # Primero intenta sin ubicacion (deja que face_recognition
+            # detecte el rostro dentro del crop). Si falla, reintenta
+            # con known_face_locations cubriendo casi todo el crop.
             encodings = face_recognition.face_encodings(rgb)
             if not encodings:
-                return "Sin rostro", 0.0
+                h, w = rgb.shape[:2]
+                p = 4
+                encodings = face_recognition.face_encodings(
+                    rgb,
+                    known_face_locations=[(p, w - p - 1, h - p - 1, p)],
+                )
+            if not encodings:
+                return "Desconocido", 0.0
 
             encoding_input = encodings[0]
 

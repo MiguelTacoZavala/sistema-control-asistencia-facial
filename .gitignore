@@ -228,3 +228,7 @@ datos/empleados/*
 datos/asistencias/*
 !datos/empleados/.gitkeep
 !datos/asistencias/.gitkeep
+
+# Archivos generados por el sistema
+embeddings.pkl
+fallidos.txt
