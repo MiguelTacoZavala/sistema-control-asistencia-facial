@@ -1,0 +1,4 @@
+umbral,detecciones_totales,falsos_positivos,rostros_perdidos,confianza_promedio_aceptadas
+0.3,50,0,0,0.866
+0.5,50,0,0,0.866
+0.7,50,0,0,0.866
