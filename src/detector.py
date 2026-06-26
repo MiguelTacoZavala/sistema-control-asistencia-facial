@@ -76,10 +76,5 @@ class FaceDetector:
         for det in detections:
             x1, y1, x2, y2, confianza = det
             cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-            etiqueta = f"{confianza:.2f}"
-            cv2.putText(
-                frame, etiqueta, (x1, y1 - 5),
-                cv2.FONT_HERSHEY_SIMPLEX, 0.5, (0, 255, 0), 1,
-            )
 
         return frame
