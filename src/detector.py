@@ -75,6 +75,35 @@ class FaceDetector:
         """
         for det in detections:
             x1, y1, x2, y2, confianza = det
-            cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
 
         return frame
+
+    def crop_face(self, frame, detection: tuple, margin: float = 0.3):
+        """Recorta un rostro del frame expandiendo el bounding box.
+
+        Args:
+            frame: Imagen numpy array BGR original.
+            detection: Una deteccion individual (x1, y1, x2, y2, confidence)
+                devuelta por detect().
+            margin: Fraccion del tamanio del bounding box para expandir
+                el recorte (0.3 = 30%). Ayuda a que face_recognition
+                tenga contexto alrededor del rostro.
+
+        Returns:
+            Recorte BGR (numpy array) o None si el recorte no es valido.
+        """
+        x1, y1, x2, y2 = map(int, detection[:4])
+        h, w = frame.shape[:2]
+
+        margin_x = int((x2 - x1) * margin)
+        margin_y = int((y2 - y1) * margin)
+
+        x1 = max(0, x1 - margin_x)
+        y1 = max(0, y1 - margin_y)
+        x2 = min(w, x2 + margin_x)
+        y2 = min(h, y2 + margin_y)
+
+        if y2 > y1 and x2 > x1:
+            return frame[y1:y2, x1:x2]
+        return None
