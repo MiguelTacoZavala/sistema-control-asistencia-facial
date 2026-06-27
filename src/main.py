@@ -30,20 +30,11 @@ def main() -> None:
 
         detections = detector.detect(frame)
 
-        height, width = frame.shape[:2]
-
         for det in detections:
-            x1, y1, x2, y2 = map(int, det[:4])
-            margin_x = int((x2 - x1) * 0.3)
-            margin_y = int((y2 - y1) * 0.3)
-            x1 = max(0, x1 - margin_x)
-            y1 = max(0, y1 - margin_y)
-            x2 = min(width, x2 + margin_x)
-            y2 = min(height, y2 + margin_y)
-
-            if y2 > y1 and x2 > x1:
-                crop = frame[y1:y2, x1:x2]
+            crop = detector.crop_face(frame, det)
+            if crop is not None:
                 nombre, _ = recognizer.recognize(crop)
+                x1, y1 = map(int, det[:2])
                 cv2.putText(
                     frame, nombre, (x1, y1 - 10),
                     cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2,
