@@ -26,10 +26,11 @@ class FaceRecognizer:
         self.db_path = db_path
         self.threshold = threshold
         self.embeddings_db: dict[str, list[np.ndarray]] = {}
+        self._centroids: dict[str, np.ndarray] = {}
         self.reload_db()
 
     def reload_db(self) -> None:
-        """Recarga embeddings.pkl desde disco.
+        """Recarga embeddings.pkl desde disco y recalcula centroides.
 
         Si el archivo no existe o esta corrupto, la base queda vacia
         y se emite una advertencia. Util para registrar nuevas personas
@@ -39,11 +40,19 @@ class FaceRecognizer:
         if not path.exists():
             print(f"[ADVERTENCIA] No se encontro {self.db_path}. Base vacia.")
             self.embeddings_db = {}
+            self._centroids = {}
             return
 
         try:
             with open(path, "rb") as f:
                 self.embeddings_db = pickle.load(f)
+            # Pre-calcular centroides: promedio de todos los embeddings
+            # por persona. Esto elimina ruido de fotos atipicas y hace
+            # la comparacion mas estable que contra cada embedding individual.
+            self._centroids = {
+                persona: np.mean(lista, axis=0)
+                for persona, lista in self.embeddings_db.items()
+            }
             print(
                 f"Base de embeddings cargada: "
                 f"{len(self.embeddings_db)} persona(s)"
@@ -51,6 +60,7 @@ class FaceRecognizer:
         except (pickle.UnpicklingError, EOFError) as e:
             print(f"[ERROR] No se pudo leer {self.db_path}: {e}")
             self.embeddings_db = {}
+            self._centroids = {}
 
     def recognize(self, face_crop: np.ndarray) -> tuple[str, float]:
         """Reconoce un rostro recortado comparando contra la base.
@@ -87,19 +97,22 @@ class FaceRecognizer:
             encoding_input = encodings[0]
 
             # Si no hay personas registradas en la base
-            if not self.embeddings_db:
+            if not self._centroids:
                 return "Desconocido", 0.0
 
-            # Buscar la persona con menor distancia euclidiana
+            # Comparar contra el centroide de cada persona (promedio
+            # de todos sus embeddings). Es mas robusto que comparar
+            # contra cada embedding individual porque elimina el ruido
+            # de fotos atipicas (un solo embedding anomalo no sesga
+            # el resultado).
             mejor_persona = "Desconocido"
             mejor_distancia = float("inf")
 
-            for persona, lista_embeddings in self.embeddings_db.items():
-                for emb in lista_embeddings:
-                    dist = np.linalg.norm(encoding_input - emb)
-                    if dist < mejor_distancia:
-                        mejor_distancia = dist
-                        mejor_persona = persona
+            for persona, centroide in self._centroids.items():
+                dist = np.linalg.norm(encoding_input - centroide)
+                if dist < mejor_distancia:
+                    mejor_distancia = dist
+                    mejor_persona = persona
 
             if mejor_distancia < self.threshold:
                 return mejor_persona, mejor_distancia

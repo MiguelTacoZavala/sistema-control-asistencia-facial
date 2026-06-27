@@ -86,7 +86,7 @@ Capturas de pantalla del sistema funcionando en distintas condiciones. Se usan c
 
 | Módulo | Clase / Funciones | Responsabilidad |
 |---|---|---|
-| `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Acepta webcam o archivo de video por argumento. Controles de teclado (`q`, `s`, `r`, `espacio`). |
+| `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Acepta webcam o archivo de video por argumento. Controles de teclado (`q`, `s`, `r`, `espacio`). Dibuja el rectángulo y el nombre con código de colores según el estado del tracker (verde = confirmado, naranja = procesando, rojo = desconocido). |
 | `configuracion.py` | Constantes (`YOLO_WEIGHTS`, `DETECTION_CONFIDENCE`, `RECOGNITION_THRESHOLD`, etc.) | Centralizar rutas, umbrales y parámetros configurables en un solo lugar. |
 | `detector.py` | `FaceDetector` | Cargar el modelo YOLOv8 y ejecutar inferencia sobre cada frame para obtener bounding boxes de rostros con su confianza. |
 | `embedding_db.py` | `generate_embeddings()` | Recorrer `dataset/known_faces/`, generar embeddings con `face_recognition`, y guardar el diccionario resultante en `embeddings.pkl`. Reportar fallidos en `fallidos.txt`. |
@@ -111,9 +111,9 @@ El constructor carga el modelo inmediatamente. El `conf_threshold` define la con
 5. Devuelve una lista de tuplas: `[(x1, y1, x2, y2, confidence), ...]`.
 
 **Método `draw_detections(frame, detections)`:**
-- Dibuja un rectángulo verde por cada detección usando `cv2.rectangle`.
-- Escribe el valor de confianza arriba del rectángulo con `cv2.putText`.
+- Dibuja un rectángulo azul por cada detección usando `cv2.rectangle`.
 - Modifica y devuelve el frame (in-place).
+- Nota: el loop principal en `main.py` no usa este método; en su lugar dibuja inline con código de colores (verde = nombre confirmado, naranja = procesando/reconociendo, rojo = desconocido).
 
 **Ejemplo de uso:**
 ```python
