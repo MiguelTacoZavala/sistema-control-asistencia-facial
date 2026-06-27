@@ -9,6 +9,7 @@ sys.path.insert(0, str(RAIZ))
 
 from src.detector import FaceDetector
 from src.recognizer import FaceRecognizer
+from src.tracker import Tracker
 
 
 def main() -> None:
@@ -21,6 +22,8 @@ def main() -> None:
 
     detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
     recognizer = FaceRecognizer("embeddings.pkl", threshold=0.6)
+    tracker = Tracker(delay_frames=15, min_frames=15, min_ratio=0.8)
+    frame_count = 0
 
     while True:
         ret, frame = cap.read()
@@ -28,19 +31,38 @@ def main() -> None:
             print("Error: no se pudo capturar la imagen")
             break
 
-        detections = detector.detect(frame)
+        frame_count += 1
+        detections = detector.track(frame)
 
         for det in detections:
-            crop = detector.crop_face(frame, det)
-            if crop is not None:
-                nombre, _ = recognizer.recognize(crop)
-                x1, y1 = map(int, det[:2])
-                cv2.putText(
-                    frame, nombre, (x1, y1 - 10),
-                    cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2,
-                )
+            x1, y1, x2, y2, conf, track_id = det
+            nombre_mostrar = "Desconocido"
 
-        frame = detector.draw_detections(frame, detections)
+            nombre = tracker.get_name(track_id)
+            if nombre is not None:
+                nombre_mostrar = nombre
+            elif tracker.tick(track_id):
+                if frame_count % 3 == 0:
+                    crop = detector.crop_face(frame, det)
+                    if crop is not None:
+                        nombre_voto, _ = recognizer.recognize(crop)
+                        nombre = tracker.vote(track_id, nombre_voto)
+                nombre_mostrar = nombre if nombre else "Reconociendo..."
+            else:
+                nombre_mostrar = "Reconociendo..."
+
+            if nombre_mostrar == "Desconocido":
+                color = (0, 0, 255)
+            elif nombre_mostrar == "Reconociendo...":
+                color = (0, 165, 255)
+            else:
+                color = (0, 255, 0)
+
+            cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+            cv2.putText(
+                frame, nombre_mostrar, (x1, y1 - 10),
+                cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2,
+            )
         cv2.imshow("Camara", frame)
 
         if cv2.waitKey(1) == 27:
