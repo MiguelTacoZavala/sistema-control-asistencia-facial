@@ -1,4 +1,4 @@
-ultralytics>=8.0.0 # Para usar YOLO, tmb brinda bytetracking
+ultralytics>=8.0.0 # Para usar YOLO (incluye ByteTrack)
 opencv-python>=4.8.0 # Dibuja rectangulo x frames.
 #===================================================================================
 face-recognition>=1.3.0 # Reconoce rostros (embedding)-> vector de características

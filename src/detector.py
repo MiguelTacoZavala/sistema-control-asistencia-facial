@@ -16,6 +16,7 @@ class FaceDetector:
         self.weights_path = weights_path
         self.conf_threshold = conf_threshold
         self.model = YOLO(self.weights_path)
+        self._local_next_id = 0
 
     def detect(self, frame, conf: float | None = None) -> list:
         """Ejecuta la detección de rostros sobre un frame.
@@ -74,10 +75,53 @@ class FaceDetector:
             para conveniencia).
         """
         for det in detections:
-            x1, y1, x2, y2, confianza = det
+            x1, y1, x2, y2 = map(int, det[:4])
             cv2.rectangle(frame, (x1, y1), (x2, y2), (255, 0, 0), 2)
 
         return frame
+
+    def track(self, frame, conf: float | None = None) -> list:
+        """Detecta y rastrea rostros usando ByteTrack (Ultralytics).
+
+        Mantiene IDs consistentes entre frames mediante persist=True.
+        Si ByteTrack aun no se inicializo (primer frame), asigna IDs
+        locales secuenciales como fallback.
+
+        Args:
+            frame: Imagen numpy array BGR.
+            conf: Umbral de confianza. Si es None, usa self.conf_threshold.
+
+        Returns:
+            Lista de tuplas (x1, y1, x2, y2, confidence, track_id).
+        """
+        if conf is None:
+            conf = self.conf_threshold
+
+        results = self.model.track(frame, conf=conf, verbose=False, persist=True)
+
+        detections = []
+
+        if len(results) == 0 or results[0].boxes is None:
+            return detections
+
+        boxes = results[0].boxes.xyxy.cpu().numpy()
+        scores = results[0].boxes.conf.cpu().numpy()
+        ids = results[0].boxes.id
+
+        if ids is not None:
+            ids = ids.cpu().numpy().astype(int)
+        else:
+            # ByteTrack aun no inicializado (primeros frames):
+            # asignar IDs locales secuenciales para que el tracker
+            # de nombres funcione desde el inicio
+            ids = list(range(self._local_next_id, self._local_next_id + len(boxes)))
+            self._local_next_id += len(boxes)
+
+        for box, score, tid in zip(boxes, scores, ids):
+            x1, y1, x2, y2 = box.astype(int).tolist()
+            detections.append((x1, y1, x2, y2, float(score), int(tid)))
+
+        return detections
 
     def crop_face(self, frame, detection: tuple, margin: float = 0.3):
         """Recorta un rostro del frame expandiendo el bounding box.
