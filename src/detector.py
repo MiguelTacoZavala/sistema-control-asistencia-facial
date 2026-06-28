@@ -16,7 +16,6 @@ class FaceDetector:
         self.weights_path = weights_path
         self.conf_threshold = conf_threshold
         self.model = YOLO(self.weights_path)
-        self._local_next_id = 0
 
     def detect(self, frame, conf: float | None = None) -> list:
         """Ejecuta la detección de rostros sobre un frame.
@@ -84,8 +83,8 @@ class FaceDetector:
         """Detecta y rastrea rostros usando ByteTrack (Ultralytics).
 
         Mantiene IDs consistentes entre frames mediante persist=True.
-        Si ByteTrack aun no se inicializo (primer frame), asigna IDs
-        locales secuenciales como fallback.
+        Si ByteTrack aun no esta inicializado (primeros frames),
+        devuelve lista vacia.
 
         Args:
             frame: Imagen numpy array BGR.
@@ -99,24 +98,14 @@ class FaceDetector:
 
         results = self.model.track(frame, conf=conf, verbose=False, persist=True)
 
-        detections = []
-
-        if len(results) == 0 or results[0].boxes is None:
-            return detections
+        if len(results) == 0 or results[0].boxes is None or results[0].boxes.id is None:
+            return []
 
         boxes = results[0].boxes.xyxy.cpu().numpy()
         scores = results[0].boxes.conf.cpu().numpy()
-        ids = results[0].boxes.id
+        ids = results[0].boxes.id.cpu().numpy().astype(int)
 
-        if ids is not None:
-            ids = ids.cpu().numpy().astype(int)
-        else:
-            # ByteTrack aun no inicializado (primeros frames):
-            # asignar IDs locales secuenciales para que el tracker
-            # de nombres funcione desde el inicio
-            ids = list(range(self._local_next_id, self._local_next_id + len(boxes)))
-            self._local_next_id += len(boxes)
-
+        detections = []
         for box, score, tid in zip(boxes, scores, ids):
             x1, y1, x2, y2 = box.astype(int).tolist()
             detections.append((x1, y1, x2, y2, float(score), int(tid)))
