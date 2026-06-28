@@ -63,10 +63,17 @@ DETECTION_CONFIDENCE = 0.5
 # Parametros de RECONOCIMIENTO (embeddings)
 # ---------------------------------------------------------------------------
 # Distancia euclidiana maxima para considerar una coincidencia valida.
-# Valor por defecto recomendado por face_recognition (0.6).
-# La tarea 5.2b (calibracion de umbral por FAR/FRR/EER) puede refinar
-# este valor; al hacerlo, actualizar aqui.
-RECOGNITION_THRESHOLD = 0.6
+# Calibrado en experiments/exp_calibracion_umbral.ipynb con curvas FAR/FRR
+# sobre la base real. Resultados clave:
+#   - El 0.6 por defecto de face_recognition resulto demasiado permisivo
+#     para esta base (FAR 87.5%): confunde a personas parecidas entre si.
+#   - El EER (cruce FAR/FRR) queda en ~0.43.
+#   - Por ser un caso de CONTROL DE ACCESO se prioriza un FAR bajo, asi que
+#     se elige un umbral algo mas estricto que el EER: 0.40 -> FAR 1.8% a
+#     cambio de FRR 11.8% (un conocido reintenta; en video se reconoce en
+#     otro frame). Los desconocidos reales quedaron todos a >0.62, asi que
+#     el riesgo real era la confusion entre conocidos.
+RECOGNITION_THRESHOLD = 0.40
 
 # Dimension del vector de embedding que produce face_recognition (dlib).
 EMBEDDING_DIM = 128
@@ -96,12 +103,12 @@ CAMARA_ID = 0
 FPS_MOSTRAR = 30
 
 # Optimizacion: reconocer solo cada N frames (reusar el ultimo nombre en
-# los intermedios) para subir los FPS. Se ajusta en la optimizacion 6.3
-# y se mide en el Experimento 6. 1 = reconocer en todos los frames.
+# los intermedios) para subir los FPS. Se mide en el Experimento 6.
+# 1 = reconocer en todos los frames.
 RECOGNIZE_EVERY_N_FRAMES = 1
 
 # Segundos de espera antes de volver a registrar a la misma persona en el
-# CSV, para no duplicar un acceso por cada frame (tarea 6.4).
+# CSV, para no duplicar un acceso por cada frame.
 CSV_COOLDOWN_SECONDS = 5
 
 # ---------------------------------------------------------------------------
