@@ -84,21 +84,11 @@ class FaceRecognizer:
             # detecte el rostro dentro del crop). Si falla, reintenta
             # con known_face_locations cubriendo casi todo el crop.
             encodings = face_recognition.face_encodings(rgb)
-            if not encodings:
-                h, w = rgb.shape[:2]
-                p = 4
-                encodings = face_recognition.face_encodings(
-                    rgb,
-                    known_face_locations=[(p, w - p - 1, h - p - 1, p)],
-                )
+
             if not encodings:
                 return "Desconocido", 0.0
 
             encoding_input = encodings[0]
-
-            # Si no hay personas registradas en la base
-            if not self._centroids:
-                return "Desconocido", 0.0
 
             # Comparar contra el centroide de cada persona (promedio
             # de todos sus embeddings). Es mas robusto que comparar
