@@ -86,12 +86,12 @@ Capturas de pantalla del sistema funcionando en distintas condiciones. Se usan c
 
 | Módulo | Clase / Funciones | Responsabilidad |
 |---|---|---|
-| `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Acepta webcam o archivo de video por argumento. Controles de teclado (`q`, `s`, `r`, `espacio`). Dibuja el rectángulo y el nombre con código de colores según el estado del tracker (verde = confirmado, naranja = procesando, rojo = desconocido). |
+| `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Dibuja el rectángulo y el nombre con código de colores según el estado del tracker: verde = nombre confirmado, naranja = periodo de gracia ("Reconociendo..."), rojo = desconocido. |
 | `configuracion.py` | Constantes (`YOLO_WEIGHTS`, `DETECTION_CONFIDENCE`, `RECOGNITION_THRESHOLD`, etc.) | Centralizar rutas, umbrales y parámetros configurables en un solo lugar. |
 | `detector.py` | `FaceDetector` | Cargar el modelo YOLOv8 y ejecutar inferencia sobre cada frame para obtener bounding boxes de rostros con su confianza. |
 | `embedding_db.py` | `generate_embeddings()` | Recorrer `dataset/known_faces/`, generar embeddings con `face_recognition`, y guardar el diccionario resultante en `embeddings.pkl`. Reportar fallidos en `fallidos.txt`. |
 | `recognizer.py` | `FaceRecognizer` | Cargar `embeddings.pkl`, comparar un rostro recortado contra la base por distancia euclidiana, y devolver el nombre más cercano o `"Desconocido"` si supera el umbral. |
-| `tracker.py` | `Tracker` | Asignar un ID único a cada rostro detectado y mantener consistencia entre frames para evitar reconocer el mismo rostro repetidamente. |
+| `tracker.py` | `Tracker` | Cachear nombres confirmados por track_id con periodo de gracia. Cuando expira la gracia se reconoce una vez; si hay match, se guarda el nombre. Si no, queda como desconocido permanentemente. |
 
 ### `detector.py` — FaceDetector en detalle
 
