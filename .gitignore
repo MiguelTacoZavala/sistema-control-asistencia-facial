@@ -229,6 +229,9 @@ datos/asistencias/*
 !datos/empleados/.gitkeep
 !datos/asistencias/.gitkeep
 
+dataset/
 # Archivos generados por el sistema
 embeddings.pkl
 fallidos.txt
+*.md
+dataset/unkown_faces
