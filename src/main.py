@@ -1,5 +1,6 @@
 """Punto de entrada del sistema de control de asistencia facial."""
 import sys
+from collections import Counter
 from pathlib import Path
 
 import cv2
