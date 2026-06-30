@@ -88,7 +88,7 @@ Capturas de pantalla del sistema funcionando en distintas condiciones. Se usan c
 |---|---|---|
 | `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Dibuja el rectángulo y el nombre con código de colores según el estado del tracker: verde = nombre confirmado, naranja = periodo de gracia ("Reconociendo..."), rojo = desconocido. |
 | `configuracion.py` | Constantes (`YOLO_WEIGHTS`, `DETECTION_CONFIDENCE`, `RECOGNITION_THRESHOLD`, etc.) | Centralizar rutas, umbrales y parámetros configurables en un solo lugar. |
-| `detector.py` | `FaceDetector` | Cargar el modelo YOLOv8 y ejecutar inferencia sobre cada frame para obtener bounding boxes de rostros con su confianza. |
+| `detector.py` | `FaceDetector` | Cargar el modelo YOLOv8 y ejecutar inferencia con ByteTrack sobre cada frame para obtener bounding boxes, confianza y track_id por rostro. |
 | `embedding_db.py` | `generate_embeddings()` | Recorrer `dataset/known_faces/`, generar embeddings con `face_recognition`, y guardar el diccionario resultante en `embeddings.pkl`. Reportar fallidos en `fallidos.txt`. |
 | `recognizer.py` | `FaceRecognizer` | Cargar `embeddings.pkl`, comparar un rostro recortado contra la base por distancia euclidiana, y devolver el nombre más cercano o `"Desconocido"` si supera el umbral. |
 | `tracker.py` | `Tracker` | Cachear nombres confirmados por track_id con periodo de gracia. Cuando expira la gracia se reconoce una vez; si hay match, se guarda el nombre. Si no, queda como desconocido permanentemente. |
@@ -105,15 +105,15 @@ El constructor carga el modelo inmediatamente. El `conf_threshold` define la con
 
 **Método `detect(frame, conf=None)`:**
 1. Recibe un frame BGR de OpenCV (numpy array).
-2. Llama a `self.model(frame, conf=conf, verbose=False)` que ejecuta la inferencia.
-3. El resultado de Ultralytics contiene `boxes.xyxy` (tensores con coordenadas `[x1, y1, x2, y2]` en píxeles) y `boxes.conf` (confianza de cada detección).
-4. Esos tensores (inicialmente en GPU) se pasan a CPU con `.cpu()`, se convierten a numpy con `.numpy()`, y se transforman a tuplas de Python.
-5. Devuelve una lista de tuplas: `[(x1, y1, x2, y2, confidence), ...]`.
+2. Llama a `self.model.track(frame, conf=conf, verbose=False, persist=True)` que ejecuta inferencia con ByteTrack, manteniendo IDs consistentes entre frames.
+3. El resultado contiene `boxes.xyxy` (coordenadas), `boxes.conf` (confianza) y `boxes.id` (track_id de ByteTrack).
+4. Si ByteTrack aún no está inicializado (primeros 1-2 frames), devuelve lista vacía.
+5. Devuelve una lista de tuplas: `[(x1, y1, x2, y2, confidence, track_id), ...]`.
 
-**Método `draw_detections(frame, detections)`:**
-- Dibuja un rectángulo azul por cada detección usando `cv2.rectangle`.
-- Modifica y devuelve el frame (in-place).
-- Nota: el loop principal en `main.py` no usa este método; en su lugar dibuja inline con código de colores (verde = nombre confirmado, naranja = procesando/reconociendo, rojo = desconocido).
+**Método `crop_face(frame, detection, margin=0.3)`:**
+- Recorta un rostro del frame usando el bounding box de YOLO, expandido por un margen del 30%.
+- Convierte la imagen a RGB (formato que espera `face_recognition`).
+- Devuelve el recorte o `None` si no es válido.
 
 **Ejemplo de uso:**
 ```python
@@ -123,9 +123,9 @@ import cv2
 detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
 frame = cv2.imread("foto_con_rostros.jpg")
 detecciones = detector.detect(frame)
-frame_con_cajas = detector.draw_detections(frame, detecciones)
-cv2.imshow("Detecciones", frame_con_cajas)
-cv2.waitKey(0)
+for det in detecciones:
+    x1, y1, x2, y2, conf, track_id = det
+    cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
 ```
 
 ### `recognizer.py` — FaceRecognizer en detalle
