@@ -7,6 +7,8 @@ faces-yolo-opencv/
 ├── .gitignore                # Archivos ignorados por git
 ├── ESTRUCTURA.md             # Este archivo
 │
+├── data/                     # Datos generados por el sistema (CSV de asistencia)
+│
 ├── dataset/                  # Datos de entrada del sistema
 │   ├── known_faces/          # Fotos de personas registradas (subcarpeta por persona)
 │   └── test_videos/          # Videos de prueba para experimentos
@@ -24,12 +26,13 @@ faces-yolo-opencv/
 │
 └── src/                      # Código fuente del sistema
     ├── __init__.py
-    ├── main.py               # Punto de entrada: loop de video en tiempo real (realtime.py en jira)
+    ├── main.py               # Punto de entrada: loop de video en tiempo real
     ├── configuracion.py      # Constantes y rutas centralizadas
-    ├── detector.py           # Detección de rostros con YOLOv8
+    ├── detector.py           # Detección de rostros con YOLOv8 + ByteTrack
     ├── embedding_db.py       # Generación y almacenamiento de embeddings
     ├── recognizer.py         # Reconocimiento facial por comparación de embeddings
-    └── tracker.py            # Seguimiento de rostros entre frames
+    ├── tracker.py            # Cache de nombres por ID de tracking con periodo de gracia
+    └── asistencia.py         # Registro de asistencia en CSV diario
 ```
 
 ## Descripción de directorios
@@ -86,12 +89,13 @@ Capturas de pantalla del sistema funcionando en distintas condiciones. Se usan c
 
 | Módulo | Clase / Funciones | Responsabilidad |
 |---|---|---|
-| `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Dibuja el rectángulo y el nombre con código de colores según el estado del tracker: verde = nombre confirmado, naranja = periodo de gracia ("Reconociendo..."), rojo = desconocido. |
+| `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Dibuja el rectángulo y el nombre con código de colores (verde = confirmado, naranja = "Reconociendo...", rojo = desconocido). Muestra solo el primer nombre en pantalla y un mensaje "BIENVENIDO, Nombre" al reconocer. Si la persona es conocida, la registra automáticamente en el CSV de asistencia. |
 | `configuracion.py` | Constantes (`YOLO_WEIGHTS`, `DETECTION_CONFIDENCE`, `RECOGNITION_THRESHOLD`, etc.) | Centralizar rutas, umbrales y parámetros configurables en un solo lugar. |
 | `detector.py` | `FaceDetector` | Cargar el modelo YOLOv8 y ejecutar inferencia con ByteTrack sobre cada frame para obtener bounding boxes, confianza y track_id por rostro. |
 | `embedding_db.py` | `generate_embeddings()` | Recorrer `dataset/known_faces/`, generar embeddings con `face_recognition`, y guardar el diccionario resultante en `embeddings.pkl`. Reportar fallidos en `fallidos.txt`. |
 | `recognizer.py` | `FaceRecognizer` | Cargar `embeddings.pkl`, comparar un rostro recortado contra la base por distancia euclidiana, y devolver el nombre más cercano o `"Desconocido"` si supera el umbral. |
 | `tracker.py` | `Tracker` | Cachear nombres confirmados por track_id con periodo de gracia. Cuando expira la gracia se reconoce una vez; si hay match, se guarda el nombre. Si no, queda como desconocido permanentemente. |
+| `asistencia.py` | `AsistenciaDB` | Registrar en `data/asistencia_YYYY-MM-DD.csv` a cada persona reconocida por primera vez en el día. Columnas: id (auto-incremental), trabajador (nombre completo), hora. |
 
 ### `detector.py` — FaceDetector en detalle
 
@@ -174,14 +178,18 @@ print(f"Reconocido: {nombre} (distancia: {distancia:.3f})")
 |---|---|---|
 | `embeddings.pkl` | `embedding_db.py` | Diccionario `{nombre: [embedding1, embedding2, ...]}` con los vectores faciales de cada persona registrada. |
 | `fallidos.txt` | `embedding_db.py` | Lista de fotos donde no se detectó rostro durante la generación de embeddings. |
-| `registro_acceso.csv` | `main.py --log` | Log de accesos: timestamp, nombre reconocido, confianza, número de frame. |
+| `data/asistencia_YYYY-MM-DD.csv` | `main.py` (automático) | Registro diario de asistencia: id, trabajador, hora. Una fila por persona por día. |
 
 ## Flujo del sistema
 
 ```
-frame → FaceDetector (YOLO) → Tracker → FaceRecognizer (embeddings)
-                                              ↓
-                                     registro_acceso.csv
-                                              ↓
-                                     OpenCV → pantalla (con boxes, nombres, FPS)
+frame → FaceDetector.detect() (YOLO + ByteTrack) → [(x1,y1,x2,y2,conf,track_id), ...]
+         ↓
+    crop_face() → FaceRecognizer.recognize() → (nombre, distancia)
+         ↓
+    Tracker.get_name() / is_grace() / confirm() → nombre cacheado
+         ↓
+    if nombre != "Desconocido" → AsistenciaDB.registrar(nombre_completo)
+         ↓
+    OpenCV → pantalla (rectángulo verde/naranja/rojo + nombre + bienvenida)
 ```
