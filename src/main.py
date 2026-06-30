@@ -11,6 +11,7 @@ sys.path.insert(0, str(RAIZ))
 from src.detector import FaceDetector
 from src.recognizer import FaceRecognizer
 from src.tracker import Tracker
+from src.asistencia import AsistenciaDB
 
 COLORES = {"Reconociendo...": (0, 165, 255), "Desconocido": (0, 0, 255)}
 
@@ -26,6 +27,10 @@ def main() -> None:
     detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
     recognizer = FaceRecognizer("embeddings.pkl", threshold=0.6)
     tracker = Tracker(grace_frames=30)
+    asistencia = AsistenciaDB()
+
+    welcome_text = ""
+    welcome_timer = 0
 
     while True:
         ret, frame = cap.read()
@@ -43,11 +48,18 @@ def main() -> None:
                 if not tracker.is_grace(track_id):
                     crop = detector.crop_face(frame, det)
                     if crop is not None:
-                        name, _ = recognizer.recognize(crop)
+                        name, dist = recognizer.recognize(crop)
+                        print(name , " " , dist)
                         tracker.confirm(track_id, name)
+                        if name != "Desconocido":
+                            completo = name.replace("_", " ")
+                            asistencia.registrar(completo)
+                            welcome_text = f"BIENVENIDO, {name.split('_')[0]}"
+                            welcome_timer = 60
                 nombre_mostrar = name or "Reconociendo..."
+                nombre_mostrar = nombre_mostrar.split("_")[0] if nombre_mostrar not in COLORES else nombre_mostrar
             else:
-                nombre_mostrar = name
+                nombre_mostrar = name.split("_")[0]
 
             color = COLORES.get(nombre_mostrar, (0, 255, 0))
             cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
@@ -56,16 +68,20 @@ def main() -> None:
                 cv2.FONT_HERSHEY_SIMPLEX, 0.6, color, 2,
             )
 
+        if welcome_timer > 0:
+            h, w = frame.shape[:2]
+            cv2.putText(
+                frame, welcome_text, (w // 2 - 150, h - 30),
+                cv2.FONT_HERSHEY_SIMPLEX, 1.2, (0, 255, 0), 3,
+            )
+            welcome_timer -= 1
+
         cv2.imshow("Camara", frame)
 
         if cv2.waitKey(1) == 27:
             break
 
-    print("\n=== Resumen de reconocimientos (votos crudos) ===")
-    total = sum(votos.values()) or 1
-    for nombre, c in votos.most_common():
-        print(f"  {nombre:15s}: {c:4d}  ({100 * c / total:.1f}%)")
-
+    asistencia.cerrar()
     cap.release()
     cv2.destroyAllWindows()
 

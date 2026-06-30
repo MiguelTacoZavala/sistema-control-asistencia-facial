@@ -233,4 +233,5 @@ dataset/test_videos
 # Archivos generados por el sistema
 embeddings.pkl
 fallidos.txt
+data/*.csv
 *.md
