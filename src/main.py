@@ -24,7 +24,7 @@ def main() -> None:
 
     detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
     recognizer = FaceRecognizer("embeddings.pkl", threshold=0.6)
-    tracker = Tracker(grace_frames=15)
+    tracker = Tracker(grace_frames=30)
 
     while True:
         ret, frame = cap.read()
@@ -32,10 +32,10 @@ def main() -> None:
             print("Error: no se pudo capturar la imagen")
             break
 
-        detections = detector.track(frame)
+        detections = detector.detect(frame)
 
         for det in detections:
-            x1, y1, x2, y2, conf, track_id = det
+            x1, y1, x2, y2, _, track_id = det
 
             name = tracker.get_name(track_id)
             if name is None:

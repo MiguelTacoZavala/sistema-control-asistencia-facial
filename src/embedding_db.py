@@ -73,8 +73,6 @@ class EmbeddingDB:
           5. Convierte la imagen de BGR a RGB (face_recognition
              trabaja en RGB, no en BGR).
           6. Genera el embedding con face_recognition.face_encodings().
-             Esta funcion usa dlib internamente para producir un vector
-             de 128 floats por rostro.
           7. Si no se genera embedding, se registra como fallido.
 
         Returns:
@@ -94,7 +92,6 @@ class EmbeddingDB:
 
         for carpeta_persona in personas:
             nombre = carpeta_persona.name
-            # Solo archivos de imagen
             fotos = sorted(
                 f for f in carpeta_persona.glob("*")
                 if f.suffix.lower() in (".jpg", ".jpeg", ".png")
@@ -107,23 +104,20 @@ class EmbeddingDB:
                 total_fotos += 1
                 procesados_persona += 1
 
-                # 1. Cargar imagen en BGR (formato nativo de OpenCV)
                 imagen_bgr = cv2.imread(str(ruta_foto))
                 if imagen_bgr is None:
                     self.fallidos.append(str(ruta_foto.relative_to(RAIZ)))
                     fallidos_persona += 1
                     continue
 
-                # 2. Detectar rostros con YOLO
                 detecciones = self.detector.detect(imagen_bgr)
                 if not detecciones:
                     self.fallidos.append(str(ruta_foto.relative_to(RAIZ)))
                     fallidos_persona += 1
                     continue
 
-                # 3. Tomar la deteccion con mayor confianza
                 mejor = max(detecciones, key=lambda d: d[4])
-                x1, y1, x2, y2, _ = mejor
+                x1, y1, x2, y2, *_ = mejor
 
                 # 4. Convertir formato de coordenadas:
                 #    YOLO: (x1, y1, x2, y2)  -> esquina sup-izq e inf-der
