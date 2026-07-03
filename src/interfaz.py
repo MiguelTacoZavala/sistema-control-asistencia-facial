@@ -47,7 +47,7 @@ ORANGE = (240, 154, 40)
 AVATAR_COLORS = [(80, 140, 220), (90, 175, 120), (210, 130, 70),
                  (160, 120, 210), (210, 100, 140), (95, 170, 190)]
 
-W, H = 1000, 720
+W, H = 1000, 620
 
 
 def bgr(rgb):
@@ -180,21 +180,21 @@ class Dashboard:
 # Secciones del dashboard.
 # --------------------------------------------------------------------------- #
 def dibujar_header(img, pen: Pluma, fps: float) -> None:
-    panel(img, 16, 12, 968, 52)
-    cy = 12 + 26
+    panel(img, 16, 8, 968, 40)
+    cy = 8 + 20
     cv2.circle(img, (40, cy), 6, bgr(GREEN), -1, cv2.LINE_AA)
-    pen.add("Control de acceso - en vivo", (58, cy), 19, INK, bold=True, anchor="lm")
+    pen.add("Control de acceso - en vivo", (58, cy), 18, INK, bold=True, anchor="lm")
     # Reloj + badge de FPS a la derecha.
-    pen.add(datetime.now().strftime("%H:%M:%S"), (812, cy), 16, MUTED, anchor="rm")
-    _rounded(img, 900, cy - 14, 76, 28, 13, bgr((233, 245, 238)))
-    pen.add(f"{fps:.0f} FPS", (938, cy), 14, GREEN, bold=True, anchor="mm")
+    pen.add(datetime.now().strftime("%H:%M:%S"), (812, cy), 15, MUTED, anchor="rm")
+    _rounded(img, 904, cy - 13, 72, 26, 12, bgr((233, 245, 238)))
+    pen.add(f"{fps:.0f} FPS", (940, cy), 13, GREEN, bold=True, anchor="mm")
 
 
 def dibujar_camara(img, pen: Pluma, frame, detections, tracker) -> None:
-    panel(img, 16, 76, 584, 372)
-    pen.add("CAM 01", (36, 96), 14, MUTED, bold=True, anchor="lm")
+    panel(img, 16, 54, 584, 352)
+    pen.add("CAM 01", (36, 72), 14, MUTED, bold=True, anchor="lm")
 
-    vx, vy, vw, vh = 32, 110, 552, 290
+    vx, vy, vw, vh = 32, 84, 552, 280
     _rounded(img, vx, vy, vw, vh, 8, (30, 32, 36))
     if frame is not None:
         fh, fw = frame.shape[:2]
@@ -211,7 +211,7 @@ def dibujar_camara(img, pen: Pluma, frame, detections, tracker) -> None:
             pen.add(texto, (rx1 + 5, ty - 11), 13, (255, 255, 255), anchor="lm")
 
     # Leyenda.
-    lx, ly = 36, 424
+    lx, ly = 36, 390
     for txt, col in (("Reconocido", GREEN), ("Desconocido", RED), ("Procesando", ORANGE)):
         _rounded(img, lx, ly - 6, 12, 12, 3, bgr(col))
         pen.add(txt, (lx + 18, ly), 13, MUTED, anchor="lm")
@@ -233,12 +233,12 @@ def _cajas(detections, tracker):
 
 
 def dibujar_accesos(img, pen: Pluma, accesos) -> None:
-    panel(img, 616, 76, 368, 372)
-    pen.add("Ultimos accesos", (636, 100), 17, INK, bold=True, anchor="lm")
-    pen.add(str(len(accesos)), (964, 100), 14, MUTED, anchor="rm")
-    cv2.line(img, (636, 116), (964, 116), bgr(BORDER), 1)
+    panel(img, 616, 54, 368, 352)
+    pen.add("Ultimos accesos", (636, 76), 17, INK, bold=True, anchor="lm")
+    pen.add(str(len(accesos)), (964, 76), 14, MUTED, anchor="rm")
+    cv2.line(img, (636, 92), (964, 92), bgr(BORDER), 1)
 
-    y = 150
+    y = 120
     if not accesos:
         pen.add("Sin accesos todavia", (636, y), 14, MUTED, anchor="lm")
         return
@@ -252,37 +252,37 @@ def dibujar_accesos(img, pen: Pluma, accesos) -> None:
             check(img, 950, y, GREEN)
         else:
             cruz(img, 948, y, RED)
-        y += 56
+        y += 52
 
 
 def dibujar_stats(img, pen: Pluma, dash: Dashboard) -> None:
-    panel(img, 16, 464, 584, 240)
+    panel(img, 16, 414, 584, 198)
     cols = (("FPS", f"{dash.fps:.0f}"), ("En cuadro", str(dash.en_cuadro)),
             ("Total hoy", str(dash.total_hoy)))
     x = 44
     for etiqueta, valor in cols:
-        pen.add(etiqueta, (x, 494), 13, MUTED, anchor="lm")
-        pen.add(valor, (x, 530), 34, INK, bold=True, anchor="lm")
+        pen.add(etiqueta, (x, 438), 13, MUTED, anchor="lm")
+        pen.add(valor, (x, 468), 32, INK, bold=True, anchor="lm")
         x += 188
-    cv2.line(img, (40, 566), (576, 566), bgr(BORDER), 1)
+    cv2.line(img, (40, 498), (576, 498), bgr(BORDER), 1)
 
     # Panel reservado: confirmacion del ultimo reconocido (nombre completo).
     if dash.ultimo_reconocido:
-        pen.add("Registrado correctamente:", (44, 594), 14, GREEN, bold=True, anchor="lm")
+        pen.add("Registrado correctamente:", (44, 518), 14, GREEN, bold=True, anchor="lm")
         col = color_avatar(dash.ultimo_reconocido)
-        cv2.circle(img, (66, 644), 22, bgr(col), -1, cv2.LINE_AA)
-        pen.add(iniciales(dash.ultimo_reconocido), (66, 644), 16,
+        cv2.circle(img, (66, 558), 20, bgr(col), -1, cv2.LINE_AA)
+        pen.add(iniciales(dash.ultimo_reconocido), (66, 558), 14,
                 (255, 255, 255), bold=True, anchor="mm")
-        pen.add(dash.ultimo_reconocido, (102, 644), 22, INK, bold=True, anchor="lm")
+        pen.add(dash.ultimo_reconocido, (98, 558), 20, INK, bold=True, anchor="lm")
     else:
-        pen.add("En espera de reconocimiento", (44, 640), 16, MUTED, anchor="lm")
+        pen.add("En espera de reconocimiento", (44, 554), 15, MUTED, anchor="lm")
 
 
 def dibujar_controles(img, pen: Pluma) -> None:
-    panel(img, 616, 464, 368, 240)
+    panel(img, 616, 414, 368, 198)
     filas = (("Iniciar / detener", "espacio"), ("Cambiar vista", "F"),
              ("Agregar persona", "A"), ("Exportar CSV", "E"))
-    y = 502
+    y = 446
     for etiqueta, tecla in filas:
         cv2.rectangle(img, (636, y - 9), (639, y + 9), bgr(MUTED), -1)
         pen.add(etiqueta, (652, y), 15, INK, anchor="lm")
@@ -291,12 +291,12 @@ def dibujar_controles(img, pen: Pluma) -> None:
         _rounded(img, cap_x, y - 13, cap_w, 26, 6, bgr(KEYBG))
         cv2.rectangle(img, (cap_x, y - 13), (cap_x + cap_w, y + 13), bgr(BORDER), 1)
         pen.add(tecla, (cap_x + cap_w // 2, y), 13, MUTED, anchor="mm")
-        y += 48
+        y += 38
 
 
 def dibujar_mensaje(img, pen: Pluma, texto: str) -> None:
     """Banner de aviso temporal centrado sobre el panel de camara."""
-    cx, y = 308, 360
+    cx, y = 308, 300
     w = len(texto) * 8 + 40
     _rounded(img, cx - w // 2, y, w, 34, 10, (30, 32, 36))
     pen.add(texto, (cx, y + 17), 14, (255, 255, 255), bold=True, anchor="mm")
@@ -312,7 +312,7 @@ def componer_dashboard(frame, detections, tracker, dash: Dashboard, corriendo: b
     dibujar_stats(lienzo, pen, dash)
     dibujar_controles(lienzo, pen)
     if not corriendo:
-        pen.add("PAUSA", (584, 96), 13, RED, bold=True, anchor="rm")
+        pen.add("PAUSA", (584, 72), 13, RED, bold=True, anchor="rm")
     if dash.mensaje_timer > 0:
         dibujar_mensaje(lienzo, pen, dash.mensaje)
     return pen.render(lienzo)
