@@ -1,0 +1,5 @@
+Configuracion,Componentes,FPS_promedio,FPS_minimo,Tiempo_total_s,Memoria_delta_MB,Frames
+Config 1: Solo YOLO,YOLO,12.1,1.17,21.94,107.91,249
+Config 2: YOLO + Reconocimiento,YOLO + FaceRecognizer,2.15,1.22,118.0,79.04,249
+Config 3: YOLO + Recog. + Skip 5f,YOLO + FaceRecognizer (1/5 frames),9.16,1.25,48.6,45.18,249
+Config 4: Pipeline completo,YOLO + FaceRecognizer + Tracker + CSV (opt. 5f),8.69,1.79,29.71,44.2,249
