@@ -281,7 +281,7 @@ def dibujar_stats(img, pen: Pluma, dash: Dashboard) -> None:
 def dibujar_controles(img, pen: Pluma) -> None:
     panel(img, 616, 414, 368, 198)
     filas = (("Iniciar / detener", "espacio"), ("Cambiar vista", "F"),
-             ("Agregar persona", "A"), ("Exportar CSV", "E"))
+             ("Exportar CSV", "E"))
     y = 446
     for etiqueta, tecla in filas:
         cv2.rectangle(img, (636, y - 9), (639, y + 9), bgr(MUTED), -1)
@@ -371,7 +371,7 @@ def main() -> None:
                 print("Error: no se pudo capturar la imagen")
                 break
 
-            detections = detector.detect(frame)
+            detections = detector.track(frame)
             dash.en_cuadro = len(detections)
 
             for det in detections:
@@ -409,8 +409,6 @@ def main() -> None:
                 prev = time.time()
         elif key in (ord("f"), ord("F")):              # F: alternar vista
             vista = "camara" if vista == "dashboard" else "dashboard"
-        elif key in (ord("a"), ord("A")):              # A: agregar persona (pendiente)
-            dash.avisar("Agregar persona: en construccion")
         elif key in (ord("e"), ord("E")):              # E: info de exportacion
             dash.avisar(f"Asistencia se guarda en data/{asistencia.ruta.name}")
 
