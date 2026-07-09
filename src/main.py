@@ -38,7 +38,7 @@ def main() -> None:
             print("Error: no se pudo capturar la imagen")
             break
 
-        detections = detector.detect(frame)
+        detections = detector.track(frame)
 
         for det in detections:
             x1, y1, x2, y2, _, track_id = det

@@ -91,7 +91,7 @@ Capturas de pantalla del sistema funcionando en distintas condiciones. Se usan c
 |---|---|---|
 | `main.py` | `main()` | Orquestar el loop de video: captura → detección → reconocimiento → visualización. Dibuja el rectángulo y el nombre con código de colores (verde = confirmado, naranja = "Reconociendo...", rojo = desconocido). Muestra solo el primer nombre en pantalla y un mensaje "BIENVENIDO, Nombre" al reconocer. Si la persona es conocida, la registra automáticamente en el CSV de asistencia. |
 | `configuracion.py` | Constantes (`YOLO_WEIGHTS`, `DETECTION_CONFIDENCE`, `RECOGNITION_THRESHOLD`, etc.) | Centralizar rutas, umbrales y parámetros configurables en un solo lugar. |
-| `detector.py` | `FaceDetector` | Cargar el modelo YOLOv8 y ejecutar inferencia con ByteTrack sobre cada frame para obtener bounding boxes, confianza y track_id por rostro. |
+| `detector.py` | `FaceDetector` | Cargar el modelo YOLOv8 y ejecutar inferencia sobre cada frame. `detect()` sin tracking para fotos; `track()` con ByteTrack para video en tiempo real. `crop_face()` recorta rostros con margen. |
 | `embedding_db.py` | `generate_embeddings()` | Recorrer `dataset/known_faces/`, generar embeddings con `face_recognition`, y guardar el diccionario resultante en `embeddings.pkl`. Reportar fallidos en `fallidos.txt`. |
 | `recognizer.py` | `FaceRecognizer` | Cargar `embeddings.pkl`, comparar un rostro recortado contra la base por distancia euclidiana, y devolver el nombre más cercano o `"Desconocido"` si supera el umbral. |
 | `tracker.py` | `Tracker` | Cachear nombres confirmados por track_id con periodo de gracia. Cuando expira la gracia se reconoce una vez; si hay match, se guarda el nombre. Si no, queda como desconocido permanentemente. |
@@ -108,16 +108,19 @@ detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
 El constructor carga el modelo inmediatamente. El `conf_threshold` define la confianza mínima para considerar una detección válida.
 
 **Método `detect(frame, conf=None)`:**
-1. Recibe un frame BGR de OpenCV (numpy array).
-2. Llama a `self.model.track(frame, conf=conf, verbose=False, persist=True)` que ejecuta inferencia con ByteTrack, manteniendo IDs consistentes entre frames.
-3. El resultado contiene `boxes.xyxy` (coordenadas), `boxes.conf` (confianza) y `boxes.id` (track_id de ByteTrack).
-4. Si ByteTrack aún no está inicializado (primeros 1-2 frames), devuelve lista vacía.
-5. Devuelve una lista de tuplas: `[(x1, y1, x2, y2, confidence, track_id), ...]`.
+- Ejecuta inferencia YOLO sin tracking (frame a frame, sin IDs).
+- Devuelve `[(x1, y1, x2, y2, confidence), ...]` — 5 elementos.
+- Usado por `embedding_db.py` para generar embeddings de fotos individuales.
+
+**Método `track(frame, conf=None)`:**
+- Ejecuta inferencia YOLO + ByteTrack (`model.track(persist=True)`).
+- Mantiene IDs consistentes entre frames.
+- Devuelve `[(x1, y1, x2, y2, confidence, track_id), ...]` — 6 elementos.
+- Usado por `main.py` para video en tiempo real.
 
 **Método `crop_face(frame, detection, margin=0.3)`:**
-- Recorta un rostro del frame usando el bounding box de YOLO, expandido por un margen del 30%.
-- Convierte la imagen a RGB (formato que espera `face_recognition`).
-- Devuelve el recorte o `None` si no es válido.
+- Recorta un rostro del frame usando el bounding box, expandido un 30%.
+- Devuelve el recorte BGR o `None` si no es válido.
 
 **Ejemplo de uso:**
 ```python
@@ -126,10 +129,17 @@ import cv2
 
 detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
 frame = cv2.imread("foto_con_rostros.jpg")
+
+# Para fotos individuales (sin tracking):
 detecciones = detector.detect(frame)
 for det in detecciones:
-    x1, y1, x2, y2, conf, track_id = det
+    x1, y1, x2, y2, conf = det
     cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+
+# Para video en tiempo real (con tracking):
+# detecciones = detector.track(frame)
+# for det in detecciones:
+#     x1, y1, x2, y2, conf, track_id = det
 ```
 
 ### `recognizer.py` — FaceRecognizer en detalle
