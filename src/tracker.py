@@ -12,16 +12,19 @@ de Ultralytics). El proceso tiene dos fases:
     "Desconocido" permanentemente (para ese track_id).
 """
 
+from src import configuracion as cfg
+
 
 class Tracker:
     """Asocia nombres confirmados a IDs de tracking.
 
     Args:
         grace_frames: Cuantos frames esperar sin reconocer al aparecer
-            un rostro nuevo (periodo de gracia).
+            un rostro nuevo (periodo de gracia). Por defecto GRACE_FRAMES
+            de configuracion.py.
     """
 
-    def __init__(self, grace_frames: int = 15) -> None:
+    def __init__(self, grace_frames: int = cfg.GRACE_FRAMES) -> None:
         self.grace_frames = grace_frames
         self._graces: dict[int, int] = {}
         self._confirmed: dict[int, str] = {}

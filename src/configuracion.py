@@ -8,9 +8,11 @@ Muchos de estos valores NO son arbitrarios: se definen a partir de los
 experimentos y pruebas del proyecto. Junto a cada parametro se indica
 que experimento/tarea lo justifica.
 
-Nota: por ahora los modulos (detector.py, recognizer.py, main.py) siguen
-usando sus propios valores por defecto. Este archivo queda como referencia
-coherente; mas adelante se puede hacer que esos modulos importen de aqui.
+Los modulos del sistema (detector.py, recognizer.py, embedding_db.py,
+tracker.py e interfaz.py) importan sus valores por defecto DESDE aqui, de
+modo que cambiar un umbral en este archivo cambia el comportamiento de todo
+el sistema. Los constructores siguen aceptando argumentos para poder
+sobrescribir un valor puntual (por ejemplo en un experimento).
 """
 
 from pathlib import Path
@@ -78,6 +80,11 @@ RECOGNITION_THRESHOLD = 0.40
 # Dimension del vector de embedding que produce face_recognition (dlib).
 EMBEDDING_DIM = 128
 
+# Margen extra al recortar el rostro detectado antes de reconocerlo, como
+# fraccion del tamanio del bounding box (0.3 = 30%). Da algo de contexto
+# alrededor de la cara para que face_recognition ubique mejor los rasgos.
+FACE_CROP_MARGIN = 0.3
+
 # ---------------------------------------------------------------------------
 # Parametros de REGISTRO (generacion de embeddings)
 # ---------------------------------------------------------------------------
@@ -110,6 +117,12 @@ RECOGNIZE_EVERY_N_FRAMES = 1
 # Segundos de espera antes de volver a registrar a la misma persona en el
 # CSV, para no duplicar un acceso por cada frame.
 CSV_COOLDOWN_SECONDS = 5
+
+# Frames de "gracia" que espera el Tracker antes de reconocer un rostro nuevo.
+# Mientras dura la gracia se muestra "procesando..."; al expirar se reconoce
+# una sola vez y se cachea el nombre para ese track_id. Un valor mas alto da
+# tiempo a que el rostro se estabilice (mejor recorte) antes de decidir.
+GRACE_FRAMES = 30
 
 # ---------------------------------------------------------------------------
 # Alias de compatibilidad

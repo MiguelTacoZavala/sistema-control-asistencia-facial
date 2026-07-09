@@ -24,6 +24,7 @@ from PIL import Image, ImageDraw, ImageFont
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
+from src import configuracion as cfg
 from src.detector import FaceDetector
 from src.recognizer import FaceRecognizer
 from src.tracker import Tracker
@@ -345,14 +346,16 @@ def vista_camara_sola(frame, detections, tracker, dash: Dashboard, corriendo: bo
 def main() -> None:
     print("Iniciando dashboard de Control de Asistencia Facial...")
 
-    cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
+    cap = cv2.VideoCapture(cfg.CAMARA_ID, cv2.CAP_DSHOW)
     if not cap.isOpened():
         print("Error: no se pudo abrir la camara")
         return
 
-    detector = FaceDetector("models/yolov8n-face.pt", conf_threshold=0.5)
-    recognizer = FaceRecognizer("embeddings.pkl", threshold=0.6)
-    tracker = Tracker(grace_frames=30)
+    # Todos los parametros (pesos YOLO, umbral de deteccion, umbral de
+    # reconocimiento calibrado y frames de gracia) salen de configuracion.py.
+    detector = FaceDetector()
+    recognizer = FaceRecognizer()
+    tracker = Tracker()
     asistencia = AsistenciaDB()
     dash = Dashboard()
     prev = time.time()

@@ -32,13 +32,14 @@ import numpy as np
 RAIZ = Path(__file__).resolve().parent.parent
 sys.path.insert(0, str(RAIZ))
 
+from src import configuracion as cfg
 from src.detector import FaceDetector
 
-# Rutas por defecto
-RUTA_DATASET = RAIZ / "dataset" / "known_faces"
-RUTA_EMBEDDINGS = RAIZ / "embeddings.pkl"
-RUTA_FALLIDOS = RAIZ / "fallidos.txt"
-RUTA_MODELO_YOLO = RAIZ / "models" / "yolov8n-face.pt"
+# Rutas por defecto (tomadas de configuracion.py, la fuente unica de verdad).
+RUTA_DATASET = cfg.KNOWN_FACES_DIR
+RUTA_EMBEDDINGS = cfg.EMBEDDINGS_PATH
+RUTA_FALLIDOS = cfg.FALLIDOS_PATH
+RUTA_MODELO_YOLO = cfg.YOLO_WEIGHTS
 
 
 class EmbeddingDB:
@@ -57,7 +58,7 @@ class EmbeddingDB:
                 Por defecto apunta a dataset/known_faces/.
         """
         self.ruta_dataset = Path(ruta_dataset)
-        self.detector = FaceDetector(str(RUTA_MODELO_YOLO), conf_threshold=0.5)
+        self.detector = FaceDetector(RUTA_MODELO_YOLO, conf_threshold=cfg.DETECTION_CONFIDENCE)
         self.embeddings: dict[str, list[np.ndarray]] = {}
         self.fallidos: list[str] = []
 
@@ -94,7 +95,7 @@ class EmbeddingDB:
             nombre = carpeta_persona.name
             fotos = sorted(
                 f for f in carpeta_persona.glob("*")
-                if f.suffix.lower() in (".jpg", ".jpeg", ".png")
+                if f.suffix.lower() in cfg.EXTENSIONES_IMAGEN
             )
             embeddings_persona: list[np.ndarray] = []
             fallidos_persona = 0

@@ -3,11 +3,20 @@
 import cv2
 from ultralytics import YOLO
 
+from src import configuracion as cfg
+
 
 class FaceDetector:
 
-    def __init__(self, weights_path: str, conf_threshold: float = 0.5) -> None:
-        self.model = YOLO(weights_path)
+    def __init__(
+        self,
+        weights_path=cfg.YOLO_WEIGHTS,
+        conf_threshold: float = cfg.DETECTION_CONFIDENCE,
+    ) -> None:
+        # Los defaults salen de configuracion.py (ruta de pesos y umbral de
+        # confianza calibrado en el Experimento 2). Se pueden sobrescribir
+        # pasando argumentos.
+        self.model = YOLO(str(weights_path))
         self.conf_threshold = conf_threshold
 
     def detect(self, frame, conf: float | None = None) -> list:
@@ -75,7 +84,7 @@ class FaceDetector:
 
         return detections
 
-    def crop_face(self, frame, detection: tuple, margin: float = 0.3):
+    def crop_face(self, frame, detection: tuple, margin: float = cfg.FACE_CROP_MARGIN):
         """Recorta un rostro del frame expandiendo el bounding box.
 
         Args:

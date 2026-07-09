@@ -11,18 +11,27 @@ import cv2
 import face_recognition
 import numpy as np
 
+from src import configuracion as cfg
+
 
 class FaceRecognizer:
     """Compara un rostro contra la base de embeddings y devuelve el nombre.
 
     Args:
-        db_path: Ruta al archivo embeddings.pkl.
+        db_path: Ruta al archivo embeddings.pkl. Por defecto la de
+            configuracion.py (EMBEDDINGS_PATH).
         threshold: Distancia euclidiana maxima para considerar una
-            coincidencia valida (0.6 es el valor recomendado por
-            face_recognition).
+            coincidencia valida. Por defecto RECOGNITION_THRESHOLD de
+            configuracion.py (0.40), calibrado con curvas FAR/FRR sobre la
+            base real: el 0.6 recomendado por face_recognition resultaba
+            demasiado permisivo (FAR alto) para este caso de control de acceso.
     """
 
-    def __init__(self, db_path: str = "embeddings.pkl", threshold: float = 0.6) -> None:
+    def __init__(
+        self,
+        db_path=cfg.EMBEDDINGS_PATH,
+        threshold: float = cfg.RECOGNITION_THRESHOLD,
+    ) -> None:
         self.db_path = db_path
         self.threshold = threshold
         self.embeddings_db: dict[str, list[np.ndarray]] = {}
