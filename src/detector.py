@@ -1,4 +1,4 @@
-"""Módulo de detección de rostros usando YOLO + ByteTrack."""
+"""Módulo de detección de rostros usando YOLO."""
 
 import cv2
 from ultralytics import YOLO
@@ -11,6 +11,38 @@ class FaceDetector:
         self.conf_threshold = conf_threshold
 
     def detect(self, frame, conf: float | None = None) -> list:
+        """Detecta rostros usando YOLO sin tracking.
+
+        Para cada frame ejecuta inferencia independiente (sin mantener
+        IDs entre frames). Ideal para procesamiento de fotos individuales.
+
+        Args:
+            frame: Imagen numpy array BGR.
+            conf: Umbral de confianza. Si es None, usa self.conf_threshold.
+
+        Returns:
+            Lista de tuplas (x1, y1, x2, y2, confidence).
+        """
+        if conf is None:
+            conf = self.conf_threshold
+
+        results = self.model(frame, conf=conf, verbose=False)
+
+        detections = []
+
+        if len(results) == 0 or results[0].boxes is None:
+            return detections
+
+        boxes = results[0].boxes.xyxy.cpu().numpy()
+        scores = results[0].boxes.conf.cpu().numpy()
+
+        for box, score in zip(boxes, scores):
+            x1, y1, x2, y2 = box.astype(int).tolist()
+            detections.append((x1, y1, x2, y2, float(score)))
+
+        return detections
+
+    def track(self, frame, conf: float | None = None) -> list:
         """Detecta y rastrea rostros usando ByteTrack (Ultralytics).
 
         Mantiene IDs consistentes entre frames mediante persist=True.
